@@ -1,11 +1,22 @@
-import express from "express";
+/**
+ * Entry point into the application
+ *
+ * {@link users }       - /users/*
+ * {@link auth }        - /auth/*
+ */
+const express = require("express");
+require("dotenv").config();
+
+const users = require("./routes/users");
+const auth = require("./routes/auth");
 
 const app = express();
+const router = express.Router();
 
-app.get("/", (req, res) => {
-  res.send("ES6 is the Node way to go");
-});
+app.use("/users", users);
 
-app.listen(3000, () => {
-  console.log(`App listening on port 3000!`);
+app.use("/auth", auth);
+
+app.listen(process.env.PORT, () => {
+  console.log(`App listening on port ${process.env.PORT}!`);
 });

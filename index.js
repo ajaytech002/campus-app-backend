@@ -1,6 +1,8 @@
 /**
  * Entry point into the application
  *
+ * Here are the list of top level API paths.
+ *
  * {@link users }       - /users/*
  * {@link auth }        - /auth/*
  */

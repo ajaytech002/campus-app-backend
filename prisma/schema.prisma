@@ -28,10 +28,58 @@ model Profile {
   userId Int     @unique
 }
 
+/// User could be a student, college staff or internal admin or super user
+/// All constraints like unique, required, etc are defined at the app level.
+/// One college user can only be associated with one college (institution).
+/// When the user changes colleges or moves on to a new college, they get a new id.
+/// Their personal details (name, email, etc) can remain the same but
+/// a new id is generated for them.
 model User {
-  id      Int      @id @default(autoincrement())
-  email   String   @unique
-  name    String?
+  /// Unique ID for this user.
+  id Int @id @default(autoincrement())
+
+  /// The roll Number provided by the college. This is the primary means of identifying the user
+  /// from a college's perspective. This also means that the same person can have
+  /// multiple accounts in different colleges.
+  /// This is not mandatory at the database level since other user types (like super users,
+  /// internal admins, etc) can have a null roll number.
+  rollNumber String? @db.VarChar(255)
+
+  /// College id that the user is studying in. This is the primary means of identifying the user
+  /// from a college's perspective. Also, this field is not mandatory at the database level since other
+  /// types of users can have a null college id.
+  collegeId Int?
+
+  /// The email address or the phone number of the user need not be unique.
+  /// This is useful in case the email is associated with multiple colleges.
+  /// of if the user changes from one college to another.
+  email String? @db.VarChar(255)
+  phone String? @db.VarChar(255)
+
+  /// Colleges might not always have a first name and last name.
+  /// We will allow the colleges to upload the user in any of the following formats.
+  /// 1. FirstName LastName (as two separate columns in an excel)
+  /// 2. Full name (as one column in an excel)
+  /// Once created, the user or the college can later update the user's name.
+  fname String? @db.VarChar(255)
+  lname String? @db.VarChar(255)
+  name  String? @db.VarChar(255)
+
+  /// This is
+  avatar  String?  @db.VarChar(512)
   posts   Post[]
   profile Profile?
+
+  Institution   Institution? @relation(fields: [institutionId], references: [id])
+  institutionId Int?
+  @@map("users")
+}
+
+/// This could apply to any kind of institution - colleges, schools etc.
+/// New Colleges are created manually by the campus apps super user.
+
+model Institution {
+  id    Int    @id @default(autoincrement())
+  name  String @db.VarChar(512)
+  users User[]
 }

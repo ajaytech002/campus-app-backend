@@ -8,11 +8,12 @@
  * {@link options}      - Swagger jsdoc options
  */
 const express = require("express");
+const morgan = require("morgan");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
 require("dotenv").config();
 
-const users = require("./routes/users");
+const userRoute = require("./routes/user.route");
 const auth = require("./routes/auth");
 
 const app = express();
@@ -43,9 +44,15 @@ const options = {
 
 const specs = swaggerJsDoc(options);
 
+app.use(
+  morgan(
+    ":date :remote-addr :method :url :status :res[content-length] - :response-time ms"
+  )
+);
+
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
-app.use("/users", users);
+app.use("/users", userRoute);
 
 app.use("/auth", auth);
 

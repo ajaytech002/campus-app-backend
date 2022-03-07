@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getUsers } = require("../models/users.js");
+const userController = require("../controllers/user.controller");
 
 /**
  * @openapi
@@ -12,8 +12,12 @@ const { getUsers } = require("../models/users.js");
  *         description: Returns all the users
  */
 router.get("/", async function (req, res) {
-  const users = await getUsers();
-  res.status(200).send({ users });
+  const data = await userController.getAllUsers(req, res);
+  if (data.data) {
+    res.status(200).send(data.data);
+  } else {
+    res.status(500).send(data.msg);
+  }
 });
 
 /**
@@ -35,9 +39,15 @@ router.get("/", async function (req, res) {
  *       200:
  *         description: ok
  */
-router.get("/", async function (req, res) {
-  const users = await getUsers();
-  res.status(200).send({ users });
+router.get("/:id", async function (req, res) {
+  const data = await userController.getUser(req, res);
+  if (data.status == "ok") {
+    res.status(200).send({ ...data });
+    return;
+  } else {
+    res.status(500).send({ ...data });
+    return;
+  }
 });
 
 module.exports = router;

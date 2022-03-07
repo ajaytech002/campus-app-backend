@@ -12,12 +12,16 @@
     "express": "^4.17.3",
     "express-oas-generator": "^1.0.41",
     "joi": "^17.6.0",
+    "morgan": "^1.10.0",
     "swagger-jsdoc": "^6.1.0",
     "swagger-ui-express": "^4.3.0"
   },
   "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^8.14.0",
     "nodemon": "^2.0.15",
     "prisma": "^3.10.0",
+    "prisma-dbml-generator": "^0.8.3",
+    "prisma-erd-generator": "^0.10.0",
     "swagger-autogen": "^2.19.0"
   },
   "scripts": {

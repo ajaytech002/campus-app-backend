@@ -2,30 +2,23 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialIntegrity"]
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider             = "mysql"
+  url                  = env("DATABASE_URL")
+  referentialIntegrity = "prisma"
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  title     String   @db.VarChar(255)
-  content   String?
-  published Boolean  @default(false)
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../database-erd.svg"
 }
 
-model Profile {
-  id     Int     @id @default(autoincrement())
-  bio    String?
-  user   User    @relation(fields: [userId], references: [id])
-  userId Int     @unique
+generator dbml {
+  provider = "prisma-dbml-generator"
 }
 
 /// User could be a student, college staff or internal admin or super user
@@ -34,52 +27,95 @@ model Profile {
 /// When the user changes colleges or moves on to a new college, they get a new id.
 /// Their personal details (name, email, etc) can remain the same but
 /// a new id is generated for them.
+/// rollNumber - Roll Number provided by the college. This is the primary means
+///              of identifying the user from a college's perspective. This also means
+///              that the same person can have multiple accounts in different colleges.
+///              This is not mandatory at the database level since other user types
+///              (like super users, internal admins, etc) can have a null roll number.
+/// collegeId  - College id that the user is studying in. This is the primary means of
+///              identifying the user from a college's perspective. Also, this field is
+///              not mandatory at the database level since other types of users can have
+///              a null college id.
+/// email      - The email address or the phone number of the user need not be unique.
+///              This is useful in case the email is associated with multiple colleges.
+///              of if the user changes from one college to another.
+/// fname      - First name of the user.
+/// lname      - Last name of the user.
+/// fullName   - Colleges might not always have a first name and last name.
+///              We will allow the colleges to upload the user in any of the following formats.
+///              1. FirstName LastName (as two separate columns in an excel)
+///              2. Full name (as one column in an excel)
+///              Once created, the user or the college can later update the user's name manually.
+///              or update the first name last name back from the user name.
+/// avatar     - The user can upload an avatar image. It is stored in S3 as a public url and
+///              stored in this field.
 model User {
   /// Unique ID for this user.
-  id Int @id @default(autoincrement())
+  id             Int     @id @default(autoincrement())
+  userCategoryId String?
+  institutionId  Int?
+  rollNumber     String? @db.VarChar(255)
+  email          String? @db.VarChar(255)
+  phone          String? @db.VarChar(255)
+  fullName       String? @db.VarChar(255)
+  avatar         String? @db.VarChar(512)
+  status         String? @db.VarChar(255)
 
-  /// The roll Number provided by the college. This is the primary means of identifying the user
-  /// from a college's perspective. This also means that the same person can have
-  /// multiple accounts in different colleges.
-  /// This is not mandatory at the database level since other user types (like super users,
-  /// internal admins, etc) can have a null roll number.
-  rollNumber String? @db.VarChar(255)
+  Institution  Institution?  @relation(fields: [institutionId], references: [id])
+  UserCategory UserCategory? @relation(fields: [userCategoryId], references: [id])
 
-  /// College id that the user is studying in. This is the primary means of identifying the user
-  /// from a college's perspective. Also, this field is not mandatory at the database level since other
-  /// types of users can have a null college id.
-  collegeId Int?
-
-  /// The email address or the phone number of the user need not be unique.
-  /// This is useful in case the email is associated with multiple colleges.
-  /// of if the user changes from one college to another.
-  email String? @db.VarChar(255)
-  phone String? @db.VarChar(255)
-
-  /// Colleges might not always have a first name and last name.
-  /// We will allow the colleges to upload the user in any of the following formats.
-  /// 1. FirstName LastName (as two separate columns in an excel)
-  /// 2. Full name (as one column in an excel)
-  /// Once created, the user or the college can later update the user's name.
-  fname String? @db.VarChar(255)
-  lname String? @db.VarChar(255)
-  name  String? @db.VarChar(255)
-
-  /// This is
-  avatar  String?  @db.VarChar(512)
-  posts   Post[]
-  profile Profile?
-
-  Institution   Institution? @relation(fields: [institutionId], references: [id])
-  institutionId Int?
-  @@map("users")
+  Notification Notification[]
+  @@map("user")
 }
 
 /// This could apply to any kind of institution - colleges, schools etc.
 /// New Colleges are created manually by the campus apps super user.
 
 model Institution {
-  id    Int    @id @default(autoincrement())
-  name  String @db.VarChar(512)
-  users User[]
+  id     Int     @id @default(autoincrement())
+  name   String  @db.VarChar(512)
+  status String? @db.VarChar(255)
+  user   User[]
+
+  Notification Notification[]
+  @@map("institution")
+}
+
+/// Category of user.
+model UserCategory {
+  id          String @id
+  description String @db.VarChar(255)
+  user        User[]
+
+  @@map("userCategory")
+}
+
+/// Notifications
+
+model Notification {
+  id                     Int      @id @default(autoincrement())
+  createdBy              Int
+  institutionId          Int
+  notificationCategoryId String   @db.VarChar(255)
+  message                String   @db.Text
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  expiresAt              DateTime @db.DateTime
+  status                 String   @db.VarChar(255)
+
+  User                 User?                 @relation(fields: [createdBy], references: [id])
+  Institution          Institution?          @relation(fields: [institutionId], references: [id])
+  NotificationCategory NotificationCategory? @relation(fields: [notificationCategoryId], references: [id])
+
+  @@map("notification")
+}
+
+// Notification categories
+
+model NotificationCategory {
+  id           String         @id
+  description  String         @db.VarChar(255)
+  Notification Notification[]
+
+  @@map("notificationCategory")
 }

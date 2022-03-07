@@ -1,0 +1,94 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table User {
+  id Int [pk, increment, note: 'Unique ID for this user.']
+  userCategoryId String
+  institutionId Int
+  rollNumber String
+  email String
+  phone String
+  fullName String
+  avatar String
+  status String
+  Institution Institution
+  UserCategory UserCategory
+  Notification Notification [not null]
+
+  Note: 'User could be a student, college staff or internal admin or super user
+All constraints like unique, required, etc are defined at the app level.
+One college user can only be associated with one college (institution).
+When the user changes colleges or moves on to a new college, they get a new id.
+Their personal details (name, email, etc) can remain the same but
+a new id is generated for them.
+rollNumber - Roll Number provided by the college. This is the primary means
+of identifying the user from a college\'s perspective. This also means
+that the same person can have multiple accounts in different colleges.
+This is not mandatory at the database level since other user types
+(like super users, internal admins, etc) can have a null roll number.
+collegeId  - College id that the user is studying in. This is the primary means of
+identifying the user from a college\'s perspective. Also, this field is
+not mandatory at the database level since other types of users can have
+a null college id.
+email      - The email address or the phone number of the user need not be unique.
+This is useful in case the email is associated with multiple colleges.
+of if the user changes from one college to another.
+fname      - First name of the user.
+lname      - Last name of the user.
+fullName   - Colleges might not always have a first name and last name.
+We will allow the colleges to upload the user in any of the following formats.
+1. FirstName LastName (as two separate columns in an excel)
+2. Full name (as one column in an excel)
+Once created, the user or the college can later update the user\'s name manually.
+or update the first name last name back from the user name.
+avatar     - The user can upload an avatar image. It is stored in S3 as a public url and
+stored in this field.'
+}
+
+Table Institution {
+  id Int [pk, increment]
+  name String [not null]
+  status String
+  user User [not null]
+  Notification Notification [not null]
+}
+
+Table UserCategory {
+  id String [pk]
+  description String [not null]
+  user User [not null]
+
+  Note: 'Category of user.'
+}
+
+Table Notification {
+  id Int [pk, increment]
+  createdBy Int [not null]
+  institutionId Int [not null]
+  notificationCategoryId String [not null]
+  message String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  expiresAt DateTime [not null]
+  status String [not null]
+  User User
+  Institution Institution
+  NotificationCategory NotificationCategory
+}
+
+Table NotificationCategory {
+  id String [pk]
+  description String [not null]
+  Notification Notification [not null]
+}
+
+Ref: User.institutionId > Institution.id
+
+Ref: User.userCategoryId > UserCategory.id
+
+Ref: Notification.createdBy > User.id
+
+Ref: Notification.institutionId > Institution.id
+
+Ref: Notification.notificationCategoryId > NotificationCategory.id

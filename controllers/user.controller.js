@@ -3,13 +3,9 @@ const joi = require("joi");
 
 const getAllUsers = async (req, res) => {
   //  validations
-  try {
-    const users = await userServices.getAllUsers();
-    return { data: users };
-  } catch (err) {
-    console.log(err);
-    return { data: null, msg: "error" };
-  }
+
+  const data = await userServices.getAllUsers();
+  return data;
 };
 
 const getUser = async (req, res) => {

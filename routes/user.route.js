@@ -13,10 +13,10 @@ const userController = require("../controllers/user.controller");
  */
 router.get("/", async function (req, res) {
   const data = await userController.getAllUsers(req, res);
-  if (data.data) {
-    res.status(200).send(data.data);
+  if (data.msg == "ok") {
+    res.status(200).send(data);
   } else {
-    res.status(500).send(data.msg);
+    res.status(500).send(data);
   }
 });
 

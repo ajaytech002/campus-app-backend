@@ -1,11 +1,13 @@
 const prisma = require("../utils/prismaClient");
+const logger = require("../utils/logger");
 
 async function getAllUsers() {
   try {
     console.time("getAllUsers");
     const users = await prisma.user.findMany();
     console.timeEnd("getAllUsers");
-    return users;
+    logger("hello");
+    return { users, msg: "ok" };
   } catch (err) {
     console.log(err);
     return { users: null, msg: "error" };

@@ -4,17 +4,19 @@
 
 Table User {
   id Int [pk, increment, note: 'Unique ID for this user.']
-  userCategoryId String
+  role String
   institutionId Int
   rollNumber String
   email String
   phone String
+  password String
   fullName String
-  avatar String
+  image String
   status String
-  Institution Institution
-  UserCategory UserCategory
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
   Notification Notification [not null]
+  Institution Institution
 
   Note: 'User could be a student, college staff or internal admin or super user
 All constraints like unique, required, etc are defined at the app level.
@@ -46,20 +48,42 @@ avatar     - The user can upload an avatar image. It is stored in S3 as a public
 stored in this field.'
 }
 
+Table Student {
+  id Int [pk, increment, note: 'Unique ID for this user.']
+  role String
+  institutionId Int
+  rollNumber String
+  email String
+  phone String
+  password String
+  fullName String
+  image String
+  status String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  Institution Institution
+  Session Session [not null]
+}
+
+Table Session {
+  id Int [pk, increment]
+  userId Int [not null]
+  token String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  expiry DateTime [not null]
+  Student Student
+}
+
 Table Institution {
   id Int [pk, increment]
   name String [not null]
   status String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
   user User [not null]
+  student Student [not null]
   Notification Notification [not null]
-}
-
-Table UserCategory {
-  id String [pk]
-  description String [not null]
-  user User [not null]
-
-  Note: 'Category of user.'
 }
 
 Table Notification {
@@ -67,7 +91,8 @@ Table Notification {
   createdBy Int [not null]
   institutionId Int [not null]
   notificationCategoryId String [not null]
-  message String [not null]
+  title String [not null]
+  description String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
   expiresAt DateTime [not null]
@@ -75,20 +100,38 @@ Table Notification {
   User User
   Institution Institution
   NotificationCategory NotificationCategory
+  Attachment Attachment [not null]
 }
 
 Table NotificationCategory {
   id String [pk]
   description String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
   Notification Notification [not null]
+}
+
+Table Attachment {
+  id Int [pk, increment]
+  notificationId Int [not null]
+  fileName String [not null]
+  url String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  expiresAt DateTime [not null]
+  Notification Notification
 }
 
 Ref: User.institutionId > Institution.id
 
-Ref: User.userCategoryId > UserCategory.id
+Ref: Student.institutionId > Institution.id
+
+Ref: Session.userId > Student.id
 
 Ref: Notification.createdBy > User.id
 
 Ref: Notification.institutionId > Institution.id
 
 Ref: Notification.notificationCategoryId > NotificationCategory.id
+
+Ref: Attachment.notificationId > Notification.id

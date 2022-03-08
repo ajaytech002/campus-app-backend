@@ -51,44 +51,86 @@ generator dbml {
 ///              stored in this field.
 model User {
   /// Unique ID for this user.
-  id             Int     @id @default(autoincrement())
-  userCategoryId String?
-  institutionId  Int?
-  rollNumber     String? @db.VarChar(255)
-  email          String? @db.VarChar(255)
-  phone          String? @db.VarChar(255)
-  fullName       String? @db.VarChar(255)
-  avatar         String? @db.VarChar(512)
-  status         String? @db.VarChar(255)
-
-  Institution  Institution?  @relation(fields: [institutionId], references: [id])
-  UserCategory UserCategory? @relation(fields: [userCategoryId], references: [id])
+  id            Int      @id @default(autoincrement())
+  role          String?  @db.VarChar(255)
+  institutionId Int?
+  rollNumber    String?  @db.VarChar(255)
+  email         String?  @db.VarChar(255)
+  phone         String?  @db.VarChar(255)
+  password      String?  @db.VarChar(512)
+  fullName      String?  @db.VarChar(255)
+  image         String?  @db.VarChar(512)
+  status        String?  @db.VarChar(255)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   Notification Notification[]
+
+  Institution Institution? @relation(fields: [institutionId], references: [id])
+
   @@map("user")
+}
+
+model Student {
+  /// Unique ID for this user.
+  id            Int      @id @default(autoincrement())
+  role          String?  @db.VarChar(255)
+  institutionId Int?
+  rollNumber    String?  @db.VarChar(255)
+  email         String?  @db.VarChar(255)
+  phone         String?  @db.VarChar(255)
+  password      String?  @db.VarChar(512)
+  fullName      String?  @db.VarChar(255)
+  image         String?  @db.VarChar(512)
+  status        String?  @db.VarChar(255)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  Institution Institution? @relation(fields: [institutionId], references: [id])
+
+  Session Session[]
+  @@map("student")
+}
+
+// login sessions
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @db.VarChar(1024)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiry    DateTime @db.DateTime
+
+  Student Student? @relation(fields: [userId], references: [id])
+
+  @@map("session")
 }
 
 /// This could apply to any kind of institution - colleges, schools etc.
 /// New Colleges are created manually by the campus apps super user.
 
 model Institution {
-  id     Int     @id @default(autoincrement())
-  name   String  @db.VarChar(512)
-  status String? @db.VarChar(255)
-  user   User[]
-
+  id           Int            @id @default(autoincrement())
+  name         String         @db.VarChar(512)
+  status       String?        @db.VarChar(255)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  user         User[]
+  student      Student[]
   Notification Notification[]
+
   @@map("institution")
 }
 
-/// Category of user.
-model UserCategory {
-  id          String @id
-  description String @db.VarChar(255)
-  user        User[]
+// /// Category of user.
+// model UserCategory {
+//   id          String @id
+//   description String @db.VarChar(255)
+//   user        User[]
 
-  @@map("userCategory")
-}
+//   @@map("userCategory")
+// }
 
 /// Notifications
 
@@ -97,7 +139,8 @@ model Notification {
   createdBy              Int
   institutionId          Int
   notificationCategoryId String   @db.VarChar(255)
-  message                String   @db.Text
+  title                  String   @db.VarChar(255)
+  description            String?  @db.Text
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
   expiresAt              DateTime @db.DateTime
@@ -107,6 +150,8 @@ model Notification {
   Institution          Institution?          @relation(fields: [institutionId], references: [id])
   NotificationCategory NotificationCategory? @relation(fields: [notificationCategoryId], references: [id])
 
+  Attachment Attachment[]
+
   @@map("notification")
 }
 
@@ -115,7 +160,23 @@ model Notification {
 model NotificationCategory {
   id           String         @id
   description  String         @db.VarChar(255)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   Notification Notification[]
 
   @@map("notificationCategory")
+}
+
+model Attachment {
+
+  id             Int           @id @default(autoincrement())
+  notificationId Int
+  fileName       String        @db.VarChar(255)
+  url            String        @db.VarChar(512)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  expiresAt      DateTime      @db.DateTime
+  Notification   Notification? @relation(fields: [notificationId], references: [id])
+
+  @@map("attachment")
 }
